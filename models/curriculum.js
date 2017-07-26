@@ -2,15 +2,17 @@ const mongoose = require('mongoose')
 
 const curriculumSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, unique: true },
-    nameEng: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    nameEng: { type: String, required: true },
     abbreviation: { type: String, required: true, unique: true },
     faculty: { type: String, required: true },
-    language: {
-      type: String,
-      enum: ['EST', 'ENG'],
-      required: true
-    },
+    languages: [
+      {
+        type: String,
+        enum: ['ET', 'EN'],
+        required: true
+      }
+    ],
     representative: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

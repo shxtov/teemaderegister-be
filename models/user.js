@@ -10,8 +10,9 @@ const userSchema = new mongoose.Schema(
     },
 
     // optional
+    // TODO check for unique email
     login: {
-      email: { type: String, unique: true },
+      email: { type: String },
       password: { type: String },
       passwordResetToken: String,
       passwordResetExpires: Date

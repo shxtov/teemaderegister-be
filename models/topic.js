@@ -7,14 +7,6 @@ const topicSchema = new mongoose.Schema(
 
     description: { type: String },
 
-    curriculums: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Curriculum',
-        required: true
-      }
-    ],
-
     supervisors: [
       {
         type: {
@@ -30,6 +22,22 @@ const topicSchema = new mongoose.Schema(
       }
     ],
 
+    curriculums: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Curriculum',
+        required: true
+      }
+    ],
+
+    types: [
+      {
+        type: String,
+        enum: ['SE', 'BA', 'MA', 'PHD'],
+        required: true
+      }
+    ],
+
     author: {
       firstName: { type: String },
       lastName: { type: String },
@@ -37,14 +45,14 @@ const topicSchema = new mongoose.Schema(
       phone: { type: String }
     },
 
-    registered: { type: Date },
-    defended: { type: Date },
     specialConditions: { type: String },
 
     file: { type: String },
     attachments: [{ type: String }],
 
     accepted: { type: Date },
+    registered: { type: Date },
+    defended: { type: Date },
     archived: { type: Date }
   },
   {
