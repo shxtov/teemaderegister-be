@@ -78,6 +78,7 @@ module.exports = (function() {
           res,
           function() {
             this.info(
+              req.method,
               req.url,
               (req.user && req.user.id) || 'guest',
               statusStyle(res.statusCode),
