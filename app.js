@@ -32,6 +32,8 @@ app.use(passport.initialize())
 // Routes
 let users = require('./routes/users')
 app.use('/api/users', users)
+let auth = require('./routes/auth')
+app.use('/api/auth', auth)
 
 // catch 404
 app.use(function(req, res) {
