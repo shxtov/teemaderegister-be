@@ -9,34 +9,34 @@ const signToken = require('../utils/signToken')
 
 router.post('/local/login', (req, res) => {
   //accepting req.body params as keys
-  req.assert('email', 'Email is not valid').isEmail()
-  req.assert('password', 'Password cannot be blank').notEmpty()
-  req.sanitize('email').normalizeEmail({ remove_dots: false })
+  req.checkBody('email', 'Email is not valid').isEmail()
+  req.checkBody('password', 'Password cannot be blank').notEmpty()
+  req.sanitizeBody('email').normalizeEmail({ remove_dots: false })
 
-  const errors = req.validationErrors()
-
-  if (errors) {
-    return res.status(400).send(errors)
-  }
-
-  new Promise((resolve, reject) => {
-    passport.authenticate('local', function(error, user) {
-      if (error || !user) {
-        return reject(error)
-      }
-      return resolve(user)
-    })(req, res)
-  })
-    .then(user => {
-      if (!user) {
-        return Promise.reject({ msg: 'Could not authenticate' })
+  req
+    .getValidationResult()
+    .then(result => {
+      if (!result.isEmpty()) {
+        let firstError = result.useFirstErrorOnly().array()[0]
+        return res.status(400).send(firstError)
       }
 
-      return res.json({ token: signToken(user) })
+      return new Promise((resolve, reject) => {
+        passport.authenticate('local', function(error, user) {
+          if (error || !user) {
+            return reject(error)
+          }
+          return resolve(user)
+        })(req, res)
+      }).then(user => {
+        if (!user) return Promise.reject({ msg: 'Could not authenticate' })
+
+        return res.json({ token: signToken(user) })
+      })
     })
     .catch(err => {
       log.warning(err)
-      return res.status(400).send({ error: err })
+      return res.status(400).send({ msg: 'Email or password incorrect' })
     })
 })
 
@@ -48,7 +48,7 @@ router.post('/local/signup', (req, res) => {
     .equals(req.body.password)
   req.sanitize('email').normalizeEmail({ remove_dots: false })
 
-  const errors = req.validationErrors()
+  const errors = req.getValidationResult()
 
   if (errors) {
     return res.status(400).send(errors)
