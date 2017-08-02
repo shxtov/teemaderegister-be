@@ -79,7 +79,7 @@ module.exports = (function() {
           function() {
             this.info(
               req.method,
-              req.url,
+              req.originalUrl,
               (req.user && req.user.id) || 'guest',
               statusStyle(res.statusCode),
               new Date() - start + 'ms'
