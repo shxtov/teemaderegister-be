@@ -16,7 +16,7 @@ router.get('/me', ensureLoggedIn, (req, res) => {
 
       let response = {
         user: {
-          id: user._id,
+          _id: user._id,
           email: user.email,
           updatedAt: user.updatedAt
         }

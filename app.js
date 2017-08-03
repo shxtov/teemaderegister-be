@@ -36,6 +36,10 @@ let auth = require('./routes/auth')
 app.use('/api/auth', auth)
 let curriculums = require('./routes/curriculums')
 app.use('/api/curriculums', curriculums)
+let topics = require('./routes/topics')
+app.use('/api/topics', topics)
+let supervisors = require('./routes/supervisors')
+app.use('/api/supervisors', supervisors)
 
 // catch 404
 app.use(function(req, res) {
