@@ -27,6 +27,7 @@ router.get('/', (req, res) => {
     }
   )
     .then(response => {
+      // TODO make react use _id
       response.map(o => {
         o.type = o._id
         return o
@@ -59,6 +60,7 @@ router.get('/:abbreviation', (req, res) => {
         })
       }
 
+      // TODO count after all query as in topics
       return Promise.all([
         Topic.count(getQuery('all', extend)),
         Topic.count(getQuery('registered', extend)),
