@@ -2,8 +2,14 @@ const mongoose = require('mongoose')
 
 const curriculumSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    nameEng: { type: String, required: true },
+    names: {
+      et: { type: String, required: true },
+      en: { type: String, required: true }
+    },
+    slugs: {
+      et: { type: String, required: true, unique: true },
+      en: { type: String, required: true, unique: true }
+    },
     abbreviation: { type: String, required: true, unique: true },
     faculty: { type: String, required: true },
     languages: [

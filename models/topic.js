@@ -3,7 +3,9 @@ const mongoose = require('mongoose')
 const topicSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
+    //TODO replace with translated title?
     titleEng: { type: String, required: true },
+    slug: { type: String, required: true, unique: true }, // created from title
 
     description: { type: String },
 
