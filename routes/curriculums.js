@@ -16,7 +16,8 @@ router.get('/', (req, res) => {
         //collection: { $push: '$$ROOT' }, //full object
         collection: {
           $push: {
-            name: '$name',
+            names: '$names',
+            slugs: '$slugs',
             _id: '$_id',
             abbreviation: '$abbreviation',
             languages: '$languages'
@@ -39,11 +40,11 @@ router.get('/', (req, res) => {
     })
 })
 
-router.get('/:abbreviation', (req, res) => {
+router.get('/:slug', (req, res) => {
   // TODO check also if supervisor for creating link in frontend
   // TODO if no curriculum throw errror client side
   Curriculum.findOne({
-    abbreviation: req.params.abbreviation
+    'slugs.et': req.params.slug
   })
     .populate('representative', '_id profile')
     .then(curriculumMeta => {
