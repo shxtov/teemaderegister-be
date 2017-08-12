@@ -8,8 +8,20 @@ const { getQuery } = require('../services/topicService')
 router.get('/', (req, res) => {
   // TODO validate query params
   const { query } = req
-  let { curriculumId, sub, page, columnKey, order, types, curriculums } = query
-  let extend = { curriculums: { $in: [curriculumId] } }
+  let {
+    curriculumId,
+    supervisorId,
+    sub,
+    page,
+    columnKey,
+    order,
+    types,
+    curriculums
+  } = query
+  let extend = curriculumId
+    ? { curriculums: { $in: [curriculumId] } }
+    : supervisorId ? { 'supervisors.supervisor': { $in: [supervisorId] } } : {}
+
   page = page || 1
   const pageSize = 20
   const skip = page !== 1 ? (page - 1) * pageSize : 0
@@ -33,6 +45,7 @@ router.get('/', (req, res) => {
   Promise.all([
     Topic.find(getQuery(sub, extend))
       .populate('supervisors.supervisor', '_id profile')
+      .populate('curriculums', '_id abbreviation slugs names type')
       .sort(sort)
       .skip(skip)
       .limit(pageSize),
