@@ -3,20 +3,26 @@ const router = express.Router()
 const log = require('../logger')
 const Topic = require('../models/topic')
 const User = require('../models/user')
-const Promise = require('bluebird')
-const { getQuery } = require('../services/topicService')
 const moment = require('moment')
+const mongoose = require('mongoose')
 
 router.get('/', (req, res) => {
-  // TODO validate query params
   const { query } = req
   let { curriculumId, sub, page, columnKey, order } = query
-  const extendIn = { curriculums: { $in: [curriculumId] } }
-  const extendNin = { curriculums: { $nin: [curriculumId] } }
 
+  //TODO page, order, sort - move in separate service
   page = page || 1
-  let pageSize = 20
-  let skip = page !== 1 ? (page - 1) * pageSize : 0
+  const pageSize = 20
+  const skip = page !== 1 ? (page - 1) * pageSize : 0
+  const endIndex = page > 1 ? page * pageSize : pageSize
+
+  const defaultOrder = 1 // ascend
+  order = order ? (order === 'ascend' ? 1 : -1) : defaultOrder
+
+  const defaultSort = 'title'
+  const sortKey = columnKey || defaultSort
+  let sort = {}
+  sort[sortKey] = order
 
   // get previous school year
   const substract = moment()
@@ -25,102 +31,206 @@ router.get('/', (req, res) => {
   const year = substract
     ? moment().startOf('year').subtract(1, 'year')
     : moment().startOf('year')
-  const yearStart = year.clone().subtract(4, 'months')
-  const yearEnd = year.clone().add(8, 'months')
+  const yearStart = year.clone().subtract(4, 'months').toDate()
+  const yearEnd = year.clone().add(8, 'months').toDate()
 
-  const limit = 20
+  const subFilter =
+    sub === 'supervised'
+      ? {
+          defended: { $gt: 0 }
+        }
+      : {}
 
-  Topic.distinct('supervisors.supervisor', getQuery(sub, extendIn))
-    .then(users => {
-      const userQuery = {
-        _id: { $in: users }
+  Topic.aggregate([
+    {
+      $match: { curriculums: { $in: [mongoose.Types.ObjectId(curriculumId)] } }
+    },
+    { $unwind: '$supervisors' },
+    { $unwind: '$supervisors.supervisor' },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'supervisors.supervisor',
+        foreignField: '_id',
+        as: 'supervisorData'
       }
-
-      this.count = users.length
-
-      return User.find(userQuery)
-        .select('_id profile')
-        .sort({ 'profile.firstName': 1, 'profile.lastName': 1 })
-        .lean()
-        .then(users =>
-          Promise.map(users, user => {
-            extendIn['supervisors.supervisor'] = user._id
-            extendNin['supervisors.supervisor'] = user._id
-
-            return Promise.all([
-              Topic.find(getQuery('all', extendIn)).select(
-                'accepted registered defended'
-              ),
-              Topic.count(getQuery('all', extendNin))
-            ]).then(([data, otherCurriculum]) => {
-              user.counts = {
-                //all: data.length,
-                defended: data.filter(t => t.defended).length,
-                defendedLastYear: data
-                  .filter(t => {
-                    return t.defended
-                  })
-                  .filter(t => {
-                    // fix date to timestamp
-                    return moment(t.defended).isBetween(
-                      yearStart,
-                      yearEnd,
-                      '[]'
-                    )
-                  }).length,
-                registered: data.filter(t => t.registered && !t.defended)
-                  .length,
-                available: data.filter(
-                  t => t.accepted && !t.registered && !t.defended
-                ).length,
-                otherCurriculum
-              }
-              return user
-            })
-          })
-        )
-    })
-    .then(data => {
-      order = order === 'descend' ? 1 : -1
-      data.sort((a, b) => {
-        if (columnKey === 'supervisor') {
-          if (a.profile.firstName < b.profile.firstName) {
-            return order
+    },
+    { $unwind: '$supervisorData' },
+    {
+      $project: {
+        _id: '$supervisors.supervisor',
+        supervisor: {
+          $concat: [
+            '$supervisorData.profile.firstName',
+            ' ',
+            '$supervisorData.profile.lastName'
+          ]
+        },
+        slug: '$supervisorData.profile.slug',
+        defendedIsTrue: {
+          $cond: {
+            if: { $ifNull: ['$defended', false] },
+            then: 1,
+            else: 0
           }
-          if (a.profile.firstName > b.profile.firstName) {
-            return order === 1 ? -1 : 1
+        },
+        defendedLastYear: {
+          $cond: {
+            if: {
+              $and: [
+                { $ifNull: ['$defended', false] },
+                { $gte: ['$defended', yearStart] },
+                { $lte: ['$defended', yearEnd] }
+              ]
+            },
+            then: 1,
+            else: 0
           }
-
-          if (a.profile.lastName < b.profile.lastName) {
-            return order
+        },
+        registeredIsTrue: {
+          $cond: {
+            if: {
+              $and: [
+                { $ifNull: ['$registered', false] },
+                { $eq: [{ $ifNull: ['$defended', null] }, null] }
+              ]
+            },
+            then: 1,
+            else: 0
           }
-          if (a.profile.lastName > b.profile.lastName) {
-            return order === 1 ? -1 : 1
+        },
+        availableIsTrue: {
+          $cond: {
+            if: {
+              $and: [
+                { $ifNull: ['$accepted', false] },
+                { $eq: [{ $ifNull: ['$registered', null] }, null] },
+                { $eq: [{ $ifNull: ['$defended', null] }, null] }
+              ]
+            },
+            then: 1,
+            else: 0
           }
         }
+      }
+    },
+    {
+      $group: {
+        _id: '$_id',
+        //profile: { $first: '$data.profile' },
+        supervisor: { $first: '$supervisor' },
+        slug: { $first: '$slug' },
+        defended: { $sum: '$defendedIsTrue' },
+        defendedLastYear: { $sum: '$defendedLastYear' },
+        registered: { $sum: '$registeredIsTrue' },
+        available: { $sum: '$availableIsTrue' },
+        all: { $sum: 1 }
+      }
+    },
+    {
+      $match: subFilter
+    },
+    { $sort: sort },
+    { $project: { tmp: '$$ROOT' } },
+    { $group: { _id: null, count: { $sum: 1 }, data: { $push: '$tmp' } } },
+    {
+      $project: {
+        count: 1,
+        data: { $slice: ['$data', skip, endIndex] }
+      }
+    }
+  ]).then(results => {
+    const { data, count } = results[0]
+    res.json({
+      data,
+      count,
+      query
+    })
+  })
+})
 
-        if (a.counts[columnKey] < b.counts[columnKey]) {
-          return order
-        } else {
-          return order === 1 ? -1 : 1
+router.get('/:slug', (req, res) => {
+  //TODO validate req.params.slug
+  User.findOne({ 'profile.slug': req.params.slug })
+    .select('_id profile')
+    .then(data => {
+      this.data = data
+      return Topic.find({
+        'supervisors.supervisor': { $in: [data._id] }
+      })
+        .select('_id accepted registered defended types')
+        .sort({ defended: 1 })
+    })
+    .then(topics => {
+      const count = {
+        available: 0,
+        registered: { all: 0, types: {} },
+        defended: { all: 0, types: {} }
+      }
+      let chartData = {}
+
+      topics.forEach(t => {
+        const accepted = t.accepted && !t.registered && !t.defended
+        const registered = t.registered && !t.defended
+        const defended = t.defended
+
+        const type = t.types[0]
+
+        if (accepted) {
+          count.available++
+        }
+        if (registered) {
+          if (!count.registered.types[type]) count.registered.types[type] = 0
+
+          count.registered.all++
+          count.registered.types[type]++
+        }
+        if (defended) {
+          if (!count.defended.types[type]) count.defended.types[type] = 0
+
+          count.defended.all++
+          count.defended.types[type]++
+
+          const defMoment = moment(defended)
+
+          const sameYear = defMoment.isSame(
+            defMoment.clone().subtract(9, 'months'),
+            'year'
+          )
+
+          const schoolyear = sameYear
+            ? defMoment.format('YY') +
+              '/' +
+              defMoment.clone().add(1, 'year').format('YY')
+            : defMoment.clone().subtract(1, 'year').format('YY') +
+              '/' +
+              defMoment.format('YY')
+
+          if (!chartData[schoolyear]) {
+            chartData[schoolyear] = {
+              all: 0,
+              types: {}
+            }
+          }
+
+          chartData[schoolyear].all++
+          if (!chartData[schoolyear].types[type])
+            chartData[schoolyear].types[type] = 0
+          chartData[schoolyear].types[type]++
         }
       })
 
-      // Fix do not go over page size
-      let startIndex = skip > 0 ? skip - 1 : skip // for index
-      let endIndex = (page > 1 ? page * limit : limit) - 1 // for index
-      endIndex = endIndex > data.length ? data.length : endIndex
-      data = data.length > limit ? data.slice(startIndex, endIndex) : data
+      // transform chartData to array
+      count.defended.chartData = Object.keys(chartData).map(key => {
+        return { name: key, counts: chartData[key] }
+      })
+
+      count.all = topics.length
 
       return res.json({
-        data,
-        count: this.count,
-        query
+        data: this.data,
+        count
       })
-    })
-    .catch(err => {
-      log.warning(err)
-      return res.status(500).send({ error: { msg: 'Server error' } })
     })
 })
 
