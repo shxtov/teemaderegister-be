@@ -140,7 +140,7 @@ router.get('/', (req, res) => {
       }
     }
   ]).then(results => {
-    const { data, count } = results[0]
+    const { data, count } = results[0] || { data: [], count: 0 }
     res.json({
       data,
       count,
