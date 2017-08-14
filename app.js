@@ -40,6 +40,8 @@ let topics = require('./routes/topics')
 app.use('/api/topics', topics)
 let supervisors = require('./routes/supervisors')
 app.use('/api/supervisors', supervisors)
+let search = require('./routes/search')
+app.use('/api/search', search)
 
 // catch 404
 app.use(function(req, res) {

@@ -11,6 +11,7 @@ router.get('/', (req, res) => {
   let {
     curriculumId,
     supervisorId,
+    q,
     sub,
     page,
     columnKey,
@@ -18,9 +19,22 @@ router.get('/', (req, res) => {
     types,
     curriculums
   } = query
-  let extend = curriculumId
-    ? { curriculums: { $in: [curriculumId] } }
-    : supervisorId ? { 'supervisors.supervisor': { $in: [supervisorId] } } : {}
+
+  let extend = {}
+  if (curriculumId) {
+    extend = { curriculums: { $in: [curriculumId] } }
+  }
+  if (supervisorId) {
+    extend = { 'supervisors.supervisor': { $in: [supervisorId] } }
+  }
+
+  // search
+  if (q) {
+    // TODO better search include author
+    extend = {
+      $or: [{ title: { $regex: q, $options: 'i' } }]
+    }
+  }
 
   page = page || 1
   const pageSize = 20

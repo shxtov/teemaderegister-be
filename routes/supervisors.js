@@ -8,7 +8,7 @@ const mongoose = require('mongoose')
 
 router.get('/', (req, res) => {
   const { query } = req
-  let { curriculumId, sub, page, columnKey, order } = query
+  let { curriculumId, q, sub, page, columnKey, order } = query
 
   //TODO page, order, sort - move in separate service
   page = page || 1
@@ -24,6 +24,11 @@ router.get('/', (req, res) => {
   let sort = {}
   sort[sortKey] = order
 
+  let extend = {}
+  if (curriculumId) {
+    extend = { curriculums: { $in: [mongoose.Types.ObjectId(curriculumId)] } }
+  }
+
   // get previous school year
   const substract = moment()
     .subtract(8, 'months')
@@ -34,16 +39,17 @@ router.get('/', (req, res) => {
   const yearStart = year.clone().subtract(4, 'months').toDate()
   const yearEnd = year.clone().add(8, 'months').toDate()
 
-  const subFilter =
-    sub === 'supervised'
-      ? {
-          defended: { $gt: 0 }
-        }
-      : {}
+  const subFilter = {}
+  if (sub === 'supervised') {
+    subFilter.defended = { $gt: 0 }
+  }
+  if (q) {
+    subFilter.supervisor = { $regex: q, $options: 'i' }
+  }
 
   Topic.aggregate([
     {
-      $match: { curriculums: { $in: [mongoose.Types.ObjectId(curriculumId)] } }
+      $match: extend
     },
     { $unwind: '$supervisors' },
     { $unwind: '$supervisors.supervisor' },
