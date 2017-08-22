@@ -10,9 +10,7 @@ router.get('/me', ensureLoggedIn, (req, res) => {
   // Check if user from token exists
   User.findById(req.user.id)
     .then(user => {
-      if (!user) {
-        return res.status(401).send({ error: { msg: 'Unauthorized' } })
-      }
+      if (!user) return res.status(401).send({ error: { msg: 'Unauthorized' } })
 
       let response = {
         user: {
@@ -28,9 +26,8 @@ router.get('/me', ensureLoggedIn, (req, res) => {
         req.user.iat + parseInt(process.env.TOKEN_UPDATE_IN_SECONDS)
       let currentTimestampInSecons = Date.now() / 1000
       let updateToken = secondsFromtoUpdate <= currentTimestampInSecons
-      if (!updateToken) {
-        return Promise.resolve(response)
-      }
+
+      if (!updateToken) return Promise.resolve(response)
 
       // save revoked token
       let newToken = new Token({
@@ -38,6 +35,7 @@ router.get('/me', ensureLoggedIn, (req, res) => {
         token: JSON.stringify(req.user),
         expires: req.user.exp * 1000
       })
+
       return newToken.save().then(() => {
         log.info('token blacklisted')
         log.info('sending updated token to ' + req.user.id)

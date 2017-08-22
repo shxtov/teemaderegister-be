@@ -17,9 +17,8 @@ module.exports.LocalStrategy = new LocalStrategy(
         return user.comparePassword(password)
       })
       .then(isMatch => {
-        if (isMatch) {
-          return next(null, this.user)
-        }
+        if (isMatch) return next(null, this.user)
+
         return Promise.reject({
           type: 'Validation',
           msg: 'Invalid email or password.'
