@@ -48,15 +48,12 @@ app.use(function(req, res) {
   return res.status(404).send('Not Found')
 })
 
-// catch jwt expired
-app.use(function(err, req, res, next) {
+// error handlers
+app.use(function(err, req, res) {
+  // catch jwt expired
   if (err.name === 'UnauthorizedError') {
     res.status(401).send('UnauthorizedError')
   }
-})
-
-// error handlers
-app.use(function(err, req, res) {
   res.status(err.status || 500).json({
     message: err.message,
     error: process.env.PRODUCTION ? {} : err
