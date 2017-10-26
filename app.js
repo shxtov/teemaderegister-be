@@ -30,26 +30,16 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(passport.initialize())
 
 // Routes
-let users = require('./routes/users')
-app.use('/api/users', users)
-let auth = require('./routes/auth')
-app.use('/api/auth', auth)
-let curriculums = require('./routes/curriculums')
-app.use('/api/curriculums', curriculums)
-let topics = require('./routes/topics')
-app.use('/api/topics', topics)
-let supervisors = require('./routes/supervisors')
-app.use('/api/supervisors', supervisors)
-let search = require('./routes/search')
-app.use('/api/search', search)
+const api = require('./routes')
+app.use('/api', api)
 
 // catch 404
-app.use(function(req, res) {
+app.use((req, res) => {
   return res.status(404).send('Not Found')
 })
 
 // error handlers
-app.use(function(err, req, res) {
+app.use((err, req, res) => {
   // catch jwt expired
   if (err.name === 'UnauthorizedError') {
     res.status(401).send('UnauthorizedError')
@@ -61,7 +51,7 @@ app.use(function(err, req, res) {
 })
 
 // https://strongloop.com/strongblog/robust-node-applications-error-handling/
-process.on('uncaughtException', function(err) {
+process.on('uncaughtException', (err) => {
   log.error(err.stack)
 
   if (!process.env.PRODUCTION) {
@@ -78,7 +68,7 @@ process.on('uncaughtException', function(err) {
         '[' + process.env.APP_NAME + '][uncaughtException] - ' + err.message,
       text: err.stack
     },
-    function(err) {
+    (err) => {
       if (err) log.error(err)
       log.warning('Email sent to developer about error')
       process.exit(1)

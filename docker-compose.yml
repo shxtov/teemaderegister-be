@@ -1,0 +1,36 @@
+version: "2"
+
+services:
+  TRmongo:
+    image: mongo:latest
+    container_name: "TRmongo"
+    networks:
+      - main
+    environment:
+      - MONGO_DATA_DIR=TR-data:/data/db
+    volumes:
+      - TR-data:/data/db
+    ports:
+        - 27017:27017
+    command: mongod --logpath=/var/log/mongodb/mongodb.log --logappend
+
+  TRnode:
+    image: teemaderegister-be
+    container_name: "TRnode"
+    networks:
+      - main
+    build: .
+    ports:
+      - ${PORT}:${PORT} 
+    volumes:
+      - .:/var/app
+      - /var/app/node_modules
+    depends_on:
+      - TRmongo
+    command: npm run start-dev
+
+volumes:
+  TR-data:
+
+networks:
+  main:

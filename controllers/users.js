@@ -1,12 +1,9 @@
-const express = require('express')
-const router = express.Router()
 const log = require('../logger')
-const ensureLoggedIn = require('../utils/ensureLoggedIn')
 const User = require('../models/user')
 const Token = require('../models/token')
 const signToken = require('../utils/signToken')
 
-router.get('/me', ensureLoggedIn, (req, res) => {
+module.exports.getUser = (req, res) => {
   // Check if user from token exists
   User.findById(req.user.id)
     .then(user => {
@@ -49,6 +46,4 @@ router.get('/me', ensureLoggedIn, (req, res) => {
     .catch(() => {
       return res.status(500).send({ error: { msg: 'Server error' } })
     })
-})
-
-module.exports = router
+}

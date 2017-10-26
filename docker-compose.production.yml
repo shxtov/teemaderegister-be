@@ -1,0 +1,10 @@
+version: "2"
+
+services:
+  TRmongo:
+    container_name: "TRmongoProduction"
+
+  TRapp:
+    image: react-weather-be
+    container_name: "TRappProduction"
+    command: npm run start

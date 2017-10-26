@@ -8,7 +8,7 @@ exports.getQuery = (type, extra) => {
     registered: null,
     defended: null
   }
-  let registered = {
+  const registered = {
     accepted: { $ne: null },
     registered: { $ne: null },
     defended: null

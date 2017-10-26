@@ -1,11 +1,9 @@
-const express = require('express')
-const router = express.Router()
 const log = require('../logger')
 const Topic = require('../models/topic')
 const Promise = require('bluebird')
 const { getQuery } = require('../services/topicService')
 
-router.get('/', (req, res) => {
+module.exports.getTopics = (req, res) => {
   // TODO validate query params
   const { query } = req
   let {
@@ -51,8 +49,7 @@ router.get('/', (req, res) => {
   // TYPES SE BA
   if (types && types.length > 0) extend.types = { $in: [query.types] }
 
-  if (curriculums && curriculums.length > 0)
-    extend['curriculums.1'] = { $exists: true }
+  if (curriculums && curriculums.length > 0) { extend['curriculums.1'] = { $exists: true } }
 
   // TODO do aggreaget for better search if needed
   // https://stackoverflow.com/questions/30341341/mongoose-query-full-name-with-regex
@@ -72,6 +69,4 @@ router.get('/', (req, res) => {
       log.warning(err)
       return res.status(500).send({ error: { msg: 'Server error' } })
     })
-})
-
-module.exports = router
+}

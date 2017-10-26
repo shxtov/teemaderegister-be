@@ -1,13 +1,26 @@
 {
-  "name": "app",
+  "name": "teemaderegister-be",
   "version": "0.0.1",
-  "description": "Sample app",
-  "repository": "git repo url",
-  "license": "MIT",
+  "description": "Topic registry backend for TLU",
   "scripts": {
-    "start": "node ./bin/www",
+    "start": "pm2-docker start ./bin/www",
+    "start-dev": "nodemon ./bin/www",
+    "lint": "standard",
     "test": "snyk test"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/romilrobtsenkov/teemaderegister-be.git"
+  },
+  "keywords": [
+    "react"
+  ],
+  "author": "Romil Robtsenkov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/romilrobtsenkov/teemaderegister-be/issues"
+  },
+  "homepage": "https://github.com/romilrobtsenkov/teemaderegister-be#readme",
   "dependencies": {
     "bcrypt": "^1.0.2",
     "bluebird": "^3.5.0",
@@ -25,5 +38,10 @@
     "passport-local": "^1.0.0",
     "slug": "^0.9.1",
     "util": "^0.10.3"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0",
+    "pm2": "^2.6.1",
+    "standard": "^10.0.3"
   }
 }

@@ -14,8 +14,6 @@ TOKEN_UPDATE_IN_SECONDS=3600
 
 PORT=3000
 
-SITE_URL=https://app.ee
-
 EMAIL=app@app.ee
 DEV_EMAIL=app@app.ee
 

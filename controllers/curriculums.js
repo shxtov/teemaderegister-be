@@ -1,5 +1,3 @@
-const express = require('express')
-const router = express.Router()
 const log = require('../logger')
 const Curriculum = require('../models/curriculum')
 const Topic = require('../models/topic')
@@ -7,13 +5,13 @@ const User = require('../models/user')
 const Promise = require('bluebird')
 const { getQuery } = require('../services/topicService')
 
-router.get('/', (req, res) => {
+module.exports.getCurriculums = (req, res) => {
   Curriculum.aggregate(
     { $sort: { type: -1, name: 1 } },
     {
       $group: {
         _id: '$type',
-        //collection: { $push: '$$ROOT' }, //full object
+        // collection: { $push: '$$ROOT' }, //full object
         collection: {
           $push: {
             names: '$names',
@@ -38,9 +36,9 @@ router.get('/', (req, res) => {
     .catch(() => {
       return res.status(500).send({ error: { msg: 'Server error' } })
     })
-})
+}
 
-router.get('/:slug', (req, res) => {
+module.exports.getCurriculumBySlug = (req, res) => {
   // TODO check also if supervisor for creating link in frontend
   // TODO if no curriculum throw errror client side
   Curriculum.findOne({
@@ -55,7 +53,7 @@ router.get('/:slug', (req, res) => {
       this.curriculumMeta = curriculumMeta
       const extend = { curriculums: { $in: [curriculumMeta._id] } }
 
-      const countUsers = function(users) {
+      const countUsers = function (users) {
         return User.count({
           _id: { $in: users }
         })
@@ -99,6 +97,4 @@ router.get('/:slug', (req, res) => {
       log.warning(err)
       return res.status(500).send({ error: { msg: 'Server error' } })
     })
-})
-
-module.exports = router
+}

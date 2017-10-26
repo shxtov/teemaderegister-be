@@ -1,16 +1,13 @@
-const express = require('express')
-const router = express.Router()
-const log = require('../logger')
 const Topic = require('../models/topic')
 const User = require('../models/user')
 const moment = require('moment')
 const mongoose = require('mongoose')
 
-router.get('/', (req, res) => {
+module.exports.getSupervisors = (req, res) => {
   const { query } = req
   let { curriculumId, q, sub, page, columnKey, order } = query
 
-  //TODO page, order, sort - move in separate service
+  // TODO page, order, sort - move in separate service
   page = page || 1
   const pageSize = 20
   const skip = page !== 1 ? (page - 1) * pageSize : 0
@@ -123,7 +120,7 @@ router.get('/', (req, res) => {
     {
       $group: {
         _id: '$_id',
-        //profile: { $first: '$data.profile' },
+        // profile: { $first: '$data.profile' },
         supervisor: { $first: '$supervisor' },
         slug: { $first: '$slug' },
         defended: { $sum: '$defendedIsTrue' },
@@ -153,10 +150,10 @@ router.get('/', (req, res) => {
       query
     })
   })
-})
+}
 
-router.get('/:slug', (req, res) => {
-  //TODO validate req.params.slug
+module.exports.getSupervisorBySlug = (req, res) => {
+  // TODO validate req.params.slug
   User.findOne({ 'profile.slug': req.params.slug })
     .select('_id profile')
     .then(data => {
@@ -220,8 +217,7 @@ router.get('/:slug', (req, res) => {
           }
 
           chartData[schoolyear].all++
-          if (!chartData[schoolyear].types[type])
-            chartData[schoolyear].types[type] = 0
+          if (!chartData[schoolyear].types[type]) { chartData[schoolyear].types[type] = 0 }
           chartData[schoolyear].types[type]++
         }
       })
@@ -238,6 +234,4 @@ router.get('/:slug', (req, res) => {
         count
       })
     })
-})
-
-module.exports = router
+}

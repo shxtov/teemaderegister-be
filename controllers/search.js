@@ -1,12 +1,10 @@
-const express = require('express')
-const router = express.Router()
 const log = require('../logger')
 const Topic = require('../models/topic')
 const User = require('../models/user')
 const Promise = require('bluebird')
 const { getQuery } = require('../services/topicService')
 
-router.get('/counts', (req, res) => {
+module.exports.getCounts = (req, res) => {
   // TODO validate q
 
   const { q } = req.query
@@ -15,7 +13,7 @@ router.get('/counts', (req, res) => {
     title: { $regex: q, $options: 'i' }
   }
 
-  const countUsers = function(users) {
+  const countUsers = function (users) {
     return User.aggregate([
       {
         $match: {
@@ -67,6 +65,4 @@ router.get('/counts', (req, res) => {
       log.warning(err)
       return res.status(500).send({ error: { msg: 'Server error' } })
     })
-})
-
-module.exports = router
+}
