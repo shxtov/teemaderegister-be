@@ -3,7 +3,7 @@ const User = require('../models/user')
 const moment = require('moment')
 const mongoose = require('mongoose')
 
-module.exports.getSupervisors = (req, res) => {
+module.exports.getSupervisors = async (req, res) => {
   const { query } = req
   let { curriculumId, q, sub, page, columnKey, order } = query
 
@@ -44,7 +44,7 @@ module.exports.getSupervisors = (req, res) => {
     subFilter.supervisor = { $regex: q, $options: 'i' }
   }
 
-  Topic.aggregate([
+  const results = await Topic.aggregate([
     {
       $match: extend
     },
@@ -142,96 +142,83 @@ module.exports.getSupervisors = (req, res) => {
         data: { $slice: ['$data', skip, endIndex] }
       }
     }
-  ]).then(results => {
-    const { data, count } = results[0] || { data: [], count: 0 }
-    res.json({
-      data,
-      count,
-      query
-    })
-  })
+  ])
+
+  const { data, count } = results[0] || { data: [], count: 0 }
+
+  res.json({ data, count, query })
 }
 
-module.exports.getSupervisorBySlug = (req, res) => {
+module.exports.getSupervisorBySlug = async (req, res) => {
   // TODO validate req.params.slug
-  User.findOne({ 'profile.slug': req.params.slug })
+  const data = await User
+    .findOne({ 'profile.slug': req.params.slug })
     .select('_id profile')
-    .then(data => {
-      this.data = data
-      return Topic.find({
-        'supervisors.supervisor': { $in: [data._id] }
-      })
-        .select('_id accepted registered defended types')
-        .sort({ defended: 1 })
-    })
-    .then(topics => {
-      const count = {
-        available: 0,
-        registered: { all: 0, types: {} },
-        defended: { all: 0, types: {} }
+
+  const topics = await Topic
+    .find({ 'supervisors.supervisor': { $in: [data._id] } })
+    .select('_id accepted registered defended types')
+    .sort({ defended: 1 })
+
+  const count = {
+    available: 0,
+    registered: { all: 0, types: {} },
+    defended: { all: 0, types: {} }
+  }
+
+  let chartData = {}
+
+  topics.forEach(t => {
+    const accepted = t.accepted && !t.registered && !t.defended
+    const registered = t.registered && !t.defended
+    const defended = t.defended
+
+    const type = t.types[0]
+
+    if (accepted) { count.available++ }
+    if (registered) {
+      if (!count.registered.types[type]) count.registered.types[type] = 0
+
+      count.registered.all++
+      count.registered.types[type]++
+    }
+
+    if (defended) {
+      if (!count.defended.types[type]) count.defended.types[type] = 0
+
+      count.defended.all++
+      count.defended.types[type]++
+
+      const defMoment = moment(defended)
+      const sameYear = defMoment
+        .isSame(defMoment.clone().subtract(9, 'months'), 'year')
+
+      const schoolyear = sameYear
+        ? defMoment.format('YY') +
+          '/' +
+          defMoment.clone().add(1, 'year').format('YY')
+        : defMoment.clone().subtract(1, 'year').format('YY') +
+          '/' +
+          defMoment.format('YY')
+
+      if (!chartData[schoolyear]) {
+        chartData[schoolyear] = { all: 0, types: {} }
       }
-      let chartData = {}
+      chartData[schoolyear].all++
 
-      topics.forEach(t => {
-        const accepted = t.accepted && !t.registered && !t.defended
-        const registered = t.registered && !t.defended
-        const defended = t.defended
-
-        const type = t.types[0]
-
-        if (accepted) {
-          count.available++
-        }
-        if (registered) {
-          if (!count.registered.types[type]) count.registered.types[type] = 0
-
-          count.registered.all++
-          count.registered.types[type]++
-        }
-        if (defended) {
-          if (!count.defended.types[type]) count.defended.types[type] = 0
-
-          count.defended.all++
-          count.defended.types[type]++
-
-          const defMoment = moment(defended)
-
-          const sameYear = defMoment.isSame(
-            defMoment.clone().subtract(9, 'months'),
-            'year'
-          )
-
-          const schoolyear = sameYear
-            ? defMoment.format('YY') +
-              '/' +
-              defMoment.clone().add(1, 'year').format('YY')
-            : defMoment.clone().subtract(1, 'year').format('YY') +
-              '/' +
-              defMoment.format('YY')
-
-          if (!chartData[schoolyear]) {
-            chartData[schoolyear] = {
-              all: 0,
-              types: {}
-            }
-          }
-
-          chartData[schoolyear].all++
-          if (!chartData[schoolyear].types[type]) { chartData[schoolyear].types[type] = 0 }
-          chartData[schoolyear].types[type]++
-        }
-      })
+      if (!chartData[schoolyear].types[type]) {
+        chartData[schoolyear].types[type] = 0
+      }
+      chartData[schoolyear].types[type]++
+    }
+  })
 
       // transform chartData to array
-      count.defended.chartData = Object.keys(chartData).map(key => {
-        return { name: key, counts: chartData[key] }
-      })
+  count.defended.chartData = Object.keys(chartData).map(key => {
+    return { name: key, counts: chartData[key] }
+  })
 
-      count.all = topics.length
+  count.all = topics.length
 
-      return res.json({
-        data: this.data,
-        count
-      })
-    })
+  return res.json({ data, count })
 }

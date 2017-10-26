@@ -1,4 +1,4 @@
-/*eslint no-console: ["error", { allow: ["log"] }] */
+/* eslint no-console: ["error", { allow: ["log"] }] */
 
 const util = require('util')
 const moment = require('moment')
@@ -10,7 +10,7 @@ dotenv.load({ path: '.env' })
 
 var mail
 
-module.exports = (function() {
+module.exports = (function () {
   var levels = {
     EMERG: 0,
     ALERT: 1,
@@ -30,7 +30,7 @@ module.exports = (function() {
     DEB: 'gray'
   }
 
-  function output(level, str) {
+  function output (level, str) {
     console.log(
       '[' +
         chalk.dim(getTimestamp()) +
@@ -48,17 +48,17 @@ module.exports = (function() {
   const LEVEL_DEBUG = 'DEB'
 
   // send email if neccessery
-  function noop() {}
+  function noop () {}
   mail = noop
 
-  function logFn(levelString) {
+  function logFn (levelString) {
     if (process.env.LOG_LEVEL < levels[levelString]) return noop
-    return function() {
+    return function () {
       output(levelString, util.format.apply(this, arguments))
     }
   }
 
-  function getTimestamp(date) {
+  function getTimestamp (date) {
     if (!date) {
       date = new Date()
     }
@@ -66,17 +66,17 @@ module.exports = (function() {
   }
 
   return {
-    middleWare: function() {
-      function statusStyle(status) {
+    middleWare: function () {
+      function statusStyle (status) {
         if (status < 300) return chalk.green(status)
         if (status < 400) return chalk.yellow(status)
         return chalk.red(status)
       }
-      return function(req, res, next) {
+      return function (req, res, next) {
         var start = new Date()
         onFinished(
           res,
-          function() {
+          function () {
             this.info(
               req.method,
               req.originalUrl,
@@ -95,7 +95,7 @@ module.exports = (function() {
     info: logFn(LEVEL_INFO),
     notice: logFn(LEVEL_NOTICE),
     warning: logFn(LEVEL_WARNING),
-    error: function() {
+    error: function () {
       mail({
         subject: process.env.APP_NAME + ' error',
         message: util.format.apply(this, arguments)

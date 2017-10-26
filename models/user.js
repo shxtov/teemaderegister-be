@@ -32,31 +32,29 @@ const userSchema = new mongoose.Schema(
 * Password hash middleware.
 * Important! Do not use arrow function, will lose ref to (this)
 */
-userSchema.pre('save', function(next) {
-  const user = this
-  if (!user.isModified('password')) {
-    return next()
-  }
-  return bcrypt
-    .genSalt(10)
-    .then(salt => {
-      return bcrypt.hash(user.password, salt)
-    })
-    .then(hash => {
-      user.password = hash
+userSchema.pre('save', async function (next) {
+  try {
+    const user = this
+    if (!user.isModified('login.password')) {
       return next()
-    })
-    .catch(err => {
-      return next(err)
-    })
+    }
+
+    const salt = await bcrypt.genSalt(10)
+    const hash = bcrypt.hash(user.login.password, salt)
+
+    user.login.password = hash
+    return next()
+  } catch (err) {
+    return next(err)
+  }
 })
 
 /**
 * Helper method for validating user's password on login through user.comparePassword
 * Important! Do not use arrow function, will lose ref to (this)
 */
-userSchema.methods.comparePassword = function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password)
+userSchema.methods.comparePassword = function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.login.password)
 }
 
 const User = mongoose.model('User', userSchema)

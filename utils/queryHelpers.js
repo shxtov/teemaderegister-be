@@ -1,6 +1,4 @@
-const extend = require('util')._extend
-
-exports.getQuery = (type, extra) => {
+exports.TopicsQuery = (type, extra) => {
   const all = {}
 
   const available = {
@@ -28,5 +26,5 @@ exports.getQuery = (type, extra) => {
   }
 
   const query = map[type] || all
-  return extra ? extend(query, extra) : query
+  return extra ? Object.assign(query, extra) : query
 }

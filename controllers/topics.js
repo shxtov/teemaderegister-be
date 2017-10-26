@@ -1,9 +1,8 @@
-const log = require('../logger')
 const Topic = require('../models/topic')
 const Promise = require('bluebird')
-const { getQuery } = require('../services/topicService')
+const { TopicsQuery } = require('../utils/queryHelpers')
 
-module.exports.getTopics = (req, res) => {
+module.exports.getTopics = async (req, res) => {
   // TODO validate query params
   const { query } = req
   let {
@@ -53,20 +52,15 @@ module.exports.getTopics = (req, res) => {
 
   // TODO do aggreaget for better search if needed
   // https://stackoverflow.com/questions/30341341/mongoose-query-full-name-with-regex
-  Promise.all([
-    Topic.find(getQuery(sub, extend))
+  const [data, count] = await Promise.all([
+    Topic.find(TopicsQuery(sub, extend))
       .populate('supervisors.supervisor', '_id profile')
       .populate('curriculums', '_id abbreviation slugs names type')
       .sort(sort)
       .skip(skip)
       .limit(pageSize),
-    Topic.count(getQuery(sub, extend))
+    Topic.count(TopicsQuery(sub, extend))
   ])
-    .then(([data, count]) => {
-      return res.json({ data, count, query })
-    })
-    .catch(err => {
-      log.warning(err)
-      return res.status(500).send({ error: { msg: 'Server error' } })
-    })
+
+  return res.json({ data, count, query })
 }

@@ -6,10 +6,6 @@ const nodemailer = require('nodemailer')
 const expressValidator = require('express-validator')
 const Promise = require('bluebird')
 
-const passport = require('passport')
-const passportStrategies = require('./utils/passportStrategies')
-passport.use(passportStrategies.LocalStrategy)
-
 // Load config
 const dotenv = require('dotenv')
 dotenv.load({ path: '.env' })
@@ -27,7 +23,6 @@ app.use(expressValidator())
 app.use(log.middleWare())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
-app.use(passport.initialize())
 
 // Routes
 const api = require('./routes')
