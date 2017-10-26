@@ -8,10 +8,10 @@ const onFinished = require('on-finished')
 const dotenv = require('dotenv')
 dotenv.load({ path: '.env' })
 
-var mail
+let mail
 
 module.exports = (function () {
-  var levels = {
+  const levels = {
     EMERG: 0,
     ALERT: 1,
     CRIT: 2,
@@ -22,7 +22,7 @@ module.exports = (function () {
     DEBUG: 7
   }
 
-  var colormap = {
+  const colormap = {
     ERR: 'red',
     WRN: 'yellow',
     NOT: 'cyan',
@@ -30,7 +30,7 @@ module.exports = (function () {
     DEB: 'gray'
   }
 
-  function output (level, str) {
+  const output = (level, str) => {
     console.log(
       '[' +
         chalk.dim(getTimestamp()) +
@@ -48,32 +48,31 @@ module.exports = (function () {
   const LEVEL_DEBUG = 'DEB'
 
   // send email if neccessery
-  function noop () {}
+  const noop = () => {}
   mail = noop
 
-  function logFn (levelString) {
+  const logFn = levelString => {
     if (process.env.LOG_LEVEL < levels[levelString]) return noop
     return function () {
       output(levelString, util.format.apply(this, arguments))
     }
   }
 
-  function getTimestamp (date) {
-    if (!date) {
-      date = new Date()
-    }
+  const getTimestamp = date => {
+    if (!date) { date = new Date() }
     return moment(date).format('YYYY-MM-DD HH:mm:ss')
   }
 
   return {
     middleWare: function () {
-      function statusStyle (status) {
+      const statusStyle = status => {
         if (status < 300) return chalk.green(status)
         if (status < 400) return chalk.yellow(status)
         return chalk.red(status)
       }
+
       return function (req, res, next) {
-        var start = new Date()
+        const start = new Date()
         onFinished(
           res,
           function () {
