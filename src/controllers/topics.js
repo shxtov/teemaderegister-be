@@ -52,7 +52,7 @@ module.exports.getTopics = async (req, res) => {
 
   // TODO do aggreaget for better search if needed
   // https://stackoverflow.com/questions/30341341/mongoose-query-full-name-with-regex
-  const [data, count] = await Promise.all([
+  const [topics, count] = await Promise.all([
     Topic.find(TopicsQuery(sub, extend))
       .populate('supervisors.supervisor', '_id profile')
       .populate('curriculums', '_id abbreviation slugs names type')
@@ -62,5 +62,5 @@ module.exports.getTopics = async (req, res) => {
     Topic.count(TopicsQuery(sub, extend))
   ])
 
-  return res.json({ data, count, query })
+  return res.json({ topics, count, query })
 }

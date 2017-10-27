@@ -4,8 +4,10 @@ const User = require('../models/user')
 const Promise = require('bluebird')
 const { TopicsQuery } = require('../utils/queryHelpers')
 
+const { Error } = require('../utils/errors')
+
 module.exports.getCurriculums = async (req, res) => {
-  const response = await Curriculum.aggregate(
+  const curriculums = await Curriculum.aggregate(
     { $sort: { type: -1, name: 1 } },
     {
       $group: {
@@ -26,12 +28,12 @@ module.exports.getCurriculums = async (req, res) => {
   )
 
   // TODO make react use _id
-  response.map(o => {
+  curriculums.map(o => {
     o.type = o._id
     return o
   })
 
-  return res.json(response)
+  return res.json({ curriculums })
 }
 
 module.exports.getCurriculumBySlug = async (req, res) => {
@@ -41,9 +43,7 @@ module.exports.getCurriculumBySlug = async (req, res) => {
     .findOne({ 'slugs.et': req.params.slug })
     .populate('representative', '_id profile')
 
-  if (!curriculumMeta) {
-    return res.status(400).send({ msg: 'no curriculum with abbreviation' })
-  }
+  if (!curriculumMeta) throw new Error(`no curriculum with slug ${req.params.slug}`)
 
   const extend = { curriculums: { $in: [curriculumMeta._id] } }
   const countUsers = users => User.count({ _id: { $in: users } })
@@ -67,8 +67,8 @@ module.exports.getCurriculumBySlug = async (req, res) => {
       .then(users => countUsers(users))
   ])
 
-  const response = {
-    data: curriculumMeta,
+  const data = {
+    meta: curriculumMeta,
     topics: {
       registered,
       available,
@@ -81,5 +81,5 @@ module.exports.getCurriculumBySlug = async (req, res) => {
     }
   }
 
-  return res.json(response)
+  return res.json(data)
 }

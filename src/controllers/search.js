@@ -46,7 +46,7 @@ module.exports.getCounts = async (req, res) => {
     .then(users => countUsers(users))
   ])
 
-  const response = {
+  const data = {
     topics: {
       registered,
       available,
@@ -58,5 +58,5 @@ module.exports.getCounts = async (req, res) => {
       all: allSupervisors
     }
   }
-  return res.json(response)
+  return res.json(data)
 }

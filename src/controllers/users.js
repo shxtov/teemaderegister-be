@@ -1,15 +1,16 @@
-const log = require('../logger')
 const User = require('../models/user')
-const Token = require('../models/token')
-const signToken = require('../utils/signToken')
+const log = require('../utils/logger')
+const { signToken, blacklistToken } = require('../utils/jwt')
+
+const { NotAuthorizedError } = require('../utils/errors')
 
 module.exports.getUser = async (req, res) => {
   // Check if user from token exists
   const user = await User.findById(req.user.id)
 
-  if (!user) return res.status(401).send({ error: { msg: 'Unauthorized' } })
+  if (!user) throw new NotAuthorizedError()
 
-  let response = {
+  let data = {
     user: {
       _id: user._id,
       email: user.email,
@@ -26,17 +27,13 @@ module.exports.getUser = async (req, res) => {
 
   if (updateToken) {
     // save prev revoked token
-    await new Token({
-      userId: req.user.id,
-      token: JSON.stringify(req.user),
-      expires: req.user.exp * 1000
-    }).save()
+    const blacklisted = await blacklistToken(req.user)
+    if (!blacklisted) throw new Error('Unable to blacklist active token')
 
-    log.info('token blacklisted')
-    log.info('sending updated token to ' + req.user.id)
-
-    response.token = signToken(user)
+    log.info(`${req.user.id} token blacklisted`)
+    log.info(`sending updated token to ${req.user.id}`)
+    data.token = signToken(user)
   }
 
-  return res.json(response)
+  return res.json(data)
 }

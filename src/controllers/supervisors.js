@@ -135,32 +135,32 @@ module.exports.getSupervisors = async (req, res) => {
     },
     { $sort: sort },
     { $project: { tmp: '$$ROOT' } },
-    { $group: { _id: null, count: { $sum: 1 }, data: { $push: '$tmp' } } },
+    { $group: { _id: null, count: { $sum: 1 }, supervisors: { $push: '$tmp' } } },
     {
       $project: {
         count: 1,
-        data: { $slice: ['$data', skip, endIndex] }
+        supervisors: { $slice: ['$supervisors', skip, endIndex] }
       }
     }
   ])
 
-  const { data, count } = results[0] || { data: [], count: 0 }
+  const { supervisors, count } = results[0] || { supervisors: [], count: 0 }
 
-  res.json({ data, count, query })
+  res.json({ supervisors, count, query })
 }
 
 module.exports.getSupervisorBySlug = async (req, res) => {
   // TODO validate req.params.slug
-  const data = await User
+  const supervisor = await User
     .findOne({ 'profile.slug': req.params.slug })
     .select('_id profile')
 
   const topics = await Topic
-    .find({ 'supervisors.supervisor': { $in: [data._id] } })
+    .find({ 'supervisors.supervisor': { $in: [supervisor._id] } })
     .select('_id accepted registered defended types')
     .sort({ defended: 1 })
 
-  const count = {
+  const counts = {
     available: 0,
     registered: { all: 0, types: {} },
     defended: { all: 0, types: {} }
@@ -175,19 +175,19 @@ module.exports.getSupervisorBySlug = async (req, res) => {
 
     const type = t.types[0]
 
-    if (accepted) { count.available++ }
+    if (accepted) { counts.available++ }
     if (registered) {
-      if (!count.registered.types[type]) count.registered.types[type] = 0
+      if (!counts.registered.types[type]) counts.registered.types[type] = 0
 
-      count.registered.all++
-      count.registered.types[type]++
+      counts.registered.all++
+      counts.registered.types[type]++
     }
 
     if (defended) {
-      if (!count.defended.types[type]) count.defended.types[type] = 0
+      if (!counts.defended.types[type]) counts.defended.types[type] = 0
 
-      count.defended.all++
-      count.defended.types[type]++
+      counts.defended.all++
+      counts.defended.types[type]++
 
       const defMoment = moment(defended)
       const sameYear = defMoment
@@ -214,11 +214,11 @@ module.exports.getSupervisorBySlug = async (req, res) => {
   })
 
       // transform chartData to array
-  count.defended.chartData = Object.keys(chartData).map(key => {
+  counts.defended.chartData = Object.keys(chartData).map(key => {
     return { name: key, counts: chartData[key] }
   })
 
-  count.all = topics.length
+  counts.all = topics.length
 
-  return res.json({ data, count })
+  return res.json({ supervisor, counts })
 }

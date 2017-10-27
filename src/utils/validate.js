@@ -1,10 +1,12 @@
 
 const { body, validationResult } = require('express-validator/check')
+const { UnprocessableEntityError } = require('./errors')
 
 const errorCheck = (req, res, next) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.mapped() })
+    const message = errors.array()[0].msg
+    return next(new UnprocessableEntityError(message))
   }
   next()
 }

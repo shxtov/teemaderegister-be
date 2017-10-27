@@ -1,5 +1,3 @@
-/* eslint no-console: ["error", { allow: ["log"] }] */
-
 const util = require('util')
 const moment = require('moment')
 const chalk = require('chalk')
@@ -10,7 +8,7 @@ dotenv.load({ path: '.env' })
 
 let mail
 
-module.exports = (function () {
+module.exports = (() => {
   const levels = {
     EMERG: 0,
     ALERT: 1,
