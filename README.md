@@ -17,8 +17,7 @@ PORT=3000
 EMAIL=app@app.ee
 DEV_EMAIL=app@app.ee
 
-DEVELOPMENT=true
-# PRODUCTION=true
+NODE_ENV=development
 
 LOG_LEVEL=7
 

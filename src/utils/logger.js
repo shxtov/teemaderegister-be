@@ -77,7 +77,7 @@ module.exports = (() => {
             this.info(
               req.method,
               req.originalUrl,
-              (req.user && req.user.id) || 'guest',
+              (req.user && req.user._id) || 'guest',
               statusStyle(res.statusCode),
               new Date() - start + 'ms'
             )

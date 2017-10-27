@@ -17,14 +17,14 @@ module.exports.jwtEnsure = async (req, res, next) => {
     // check if blacklisted
     const isBlacklisted = await Token.findOne({ token: JSON.stringify(req.user) })
     if (isBlacklisted) {
-      log.warning(`${req.user.id} tried blacklisted token ${isBlacklisted}`)
+      log.warning(`${req.user._id} tried blacklisted token ${isBlacklisted}`)
 
       next(new NotAuthorizedError())
     }
 
     // check if token valid after user data changed
     // TODO only check password reset
-    const user = await User.findById(req.user.id).select('updatedAt')
+    const user = await User.findById(req.user._id).select('updatedAt')
     if (!user) return next(new NotAuthorizedError())
 
     // DO NOT allow if user password changed after last token issued
@@ -33,7 +33,7 @@ module.exports.jwtEnsure = async (req, res, next) => {
       const blacklisted = await this.blacklistToken(req.user)
 
       if (!blacklisted) return next(new Error('Unable to blacklist active token'))
-      log.info(`${req.user.id} token blacklisted`)
+      log.info(`${req.user._id} token blacklisted`)
 
       return next(new NotAuthorizedError())
     }
@@ -57,7 +57,7 @@ module.exports.signToken = user => {
 
   return jwt.sign(
     {
-      id: user._id,
+      _id: user._id,
       ts: new Date() * 1,
       exp: newExpireTimestampInSeconds
     },
@@ -66,7 +66,7 @@ module.exports.signToken = user => {
 }
 
 module.exports.blacklistToken = user => new Token({
-  userId: user.id,
+  userId: user._id,
   token: JSON.stringify(user),
   expires: user.exp * 1000
 }).save()

@@ -46,6 +46,6 @@ module.exports.logout = async (req, res) => {
   const blacklisted = await blacklistToken(req.user)
   if (!blacklisted) throw new Error('Unable to blacklist active token')
 
-  log.info(`${req.user.id} token blacklisted`)
+  log.info(`${req.user._id} token blacklisted`)
   return res.json({ message: 'successfully logged out' })
 }
