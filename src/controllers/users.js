@@ -5,7 +5,6 @@ const { signToken, blacklistToken } = require('../utils/jwt')
 const { NotAuthorizedError } = require('../utils/errors')
 
 module.exports.getUser = async (req, res) => {
-  console.log(req.user)
   // Check if user from token exists
   const user = await User.findById(req.user._id)
 

@@ -19,7 +19,7 @@ module.exports.jwtEnsure = async (req, res, next) => {
     if (isBlacklisted) {
       log.warning(`${req.user._id} tried blacklisted token ${isBlacklisted}`)
 
-      next(new NotAuthorizedError())
+      return next(new NotAuthorizedError())
     }
 
     // check if token valid after user data changed
@@ -28,7 +28,7 @@ module.exports.jwtEnsure = async (req, res, next) => {
     if (!user) return next(new NotAuthorizedError())
 
     // DO NOT allow if user password changed after last token issued
-    let lastPassUpdate = Math.floor(new Date(user.updatedAt) * 1 / 1000)
+    const lastPassUpdate = Math.floor(new Date(user.updatedAt) * 1 / 1000)
     if (lastPassUpdate >= req.user.iat) {
       const blacklisted = await this.blacklistToken(req.user)
 
@@ -41,7 +41,7 @@ module.exports.jwtEnsure = async (req, res, next) => {
     // all good, proceed
     return next()
   } catch (err) {
-    next(new ServerError())
+    return next(new ServerError())
   }
 }
 
@@ -51,7 +51,7 @@ module.exports.jwtCheck = (req, res, next) => {
 }
 
 module.exports.signToken = user => {
-  let newExpireTimestampInSeconds =
+  const newExpireTimestampInSeconds =
     Math.floor(Date.now() / 1000) +
     parseInt(process.env.TOKEN_EXPIRES_IN_SECONDS)
 
