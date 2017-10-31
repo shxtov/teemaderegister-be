@@ -17,9 +17,9 @@ module.exports.localLogin = [
   body('email')
     .isEmail().withMessage('Email is not valid')
     .trim().normalizeEmail({ remove_dots: false }),
-  body('password').isLength({ min: passwordMinLength }).withMessage(
-      `Password must be at least ${passwordMinLength} characters long`
-  ),
+  body('password')
+    .isLength({ min: passwordMinLength })
+    .withMessage(`Password must be at least ${passwordMinLength} characters long`),
   errorCheck
 ]
 

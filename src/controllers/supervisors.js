@@ -213,7 +213,7 @@ module.exports.getSupervisorBySlug = async (req, res) => {
     }
   })
 
-      // transform chartData to array
+  // transform chartData to array
   counts.defended.chartData = Object.keys(chartData).map(key => {
     return { name: key, counts: chartData[key] }
   })

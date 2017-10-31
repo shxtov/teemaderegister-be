@@ -43,7 +43,7 @@ module.exports.getCounts = async (req, res) => {
     Topic.distinct('supervisors.supervisor', TopicsQuery('all'))
       .then(users => countUsers(users)),
     Topic.distinct('supervisors.supervisor', TopicsQuery('defended'))
-    .then(users => countUsers(users))
+      .then(users => countUsers(users))
   ])
 
   const data = {

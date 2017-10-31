@@ -51,18 +51,13 @@ module.exports.jwtCheck = (req, res, next) => {
 }
 
 module.exports.signToken = user => {
-  const newExpireTimestampInSeconds =
-    Math.floor(Date.now() / 1000) +
-    parseInt(process.env.TOKEN_EXPIRES_IN_SECONDS)
+  const data = {
+    _id: user._id,
+    ts: new Date().getTime() // unique value
+  }
+  const expiresIn = parseInt(process.env.TOKEN_EXPIRES_IN_SECONDS)
 
-  return jwt.sign(
-    {
-      _id: user._id,
-      ts: new Date() * 1,
-      exp: newExpireTimestampInSeconds
-    },
-    jwtSecret
-  )
+  return jwt.sign(data, jwtSecret, { expiresIn })
 }
 
 module.exports.blacklistToken = user => new Token({

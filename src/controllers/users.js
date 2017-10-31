@@ -20,10 +20,10 @@ module.exports.getUser = async (req, res) => {
 
   // update token if more than X seconds from last token update
   // time to send update token (1h)
-  let secondsFromtoUpdate =
+  const secondsFromtoUpdate =
     req.user.iat + parseInt(process.env.TOKEN_UPDATE_IN_SECONDS)
-  let currentTimestampInSecons = Date.now() / 1000
-  let updateToken = secondsFromtoUpdate <= currentTimestampInSecons
+  const currentTimestampInSeconds = parseInt(Date.now() / 1000)
+  const updateToken = secondsFromtoUpdate <= currentTimestampInSeconds
 
   if (updateToken) {
     // save prev revoked token
