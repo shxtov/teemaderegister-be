@@ -21,7 +21,7 @@ module.exports.localLogin = async (req, res) => {
 module.exports.localSignup = async (req, res) => {
   const { firstName, lastName, email, password } = req.body
 
-  const existingUser = await User.findOne({ email })
+  const existingUser = await User.findOne({ 'login.email': email })
   if (existingUser) { throw new Error('Account with that email address already exists') }
 
   const user = await new User({
