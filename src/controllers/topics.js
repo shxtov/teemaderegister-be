@@ -3,7 +3,6 @@ const Promise = require('bluebird')
 const { TopicsQuery } = require('../utils/queryHelpers')
 
 module.exports.getTopics = async (req, res) => {
-  // TODO validate query params
   const { query } = req
   let {
     curriculumId,
@@ -27,7 +26,6 @@ module.exports.getTopics = async (req, res) => {
 
   // search
   if (q) {
-    // TODO better search include author
     extend = {
       $or: [{ title: { $regex: q, $options: 'i' } }]
     }
@@ -50,7 +48,7 @@ module.exports.getTopics = async (req, res) => {
 
   if (curriculums && curriculums.length > 0) { extend['curriculums.1'] = { $exists: true } }
 
-  // TODO do aggreaget for better search if needed
+  // Aggreaget for better search if needed
   // https://stackoverflow.com/questions/30341341/mongoose-query-full-name-with-regex
   const [topics, count] = await Promise.all([
     Topic.find(TopicsQuery(sub, extend))

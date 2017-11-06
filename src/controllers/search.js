@@ -4,8 +4,6 @@ const Promise = require('bluebird')
 const { TopicsQuery } = require('../utils/queryHelpers')
 
 module.exports.getCounts = async (req, res) => {
-  // TODO validate q
-
   const { q } = req.query
   const topicExtend = { title: { $regex: q, $options: 'i' } }
 

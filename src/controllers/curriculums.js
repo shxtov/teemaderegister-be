@@ -27,7 +27,6 @@ module.exports.getCurriculums = async (req, res) => {
     }
   )
 
-  // TODO make react use _id
   curriculums.map(o => {
     o.type = o._id
     return o
@@ -37,8 +36,6 @@ module.exports.getCurriculums = async (req, res) => {
 }
 
 module.exports.getCurriculumBySlug = async (req, res) => {
-  // TODO check also if supervisor for creating link in frontend
-  // TODO if no curriculum throw errror client side
   const curriculumMeta = await Curriculum
     .findOne({ 'slugs.et': req.params.slug })
     .populate('representative', '_id profile')
@@ -48,7 +45,6 @@ module.exports.getCurriculumBySlug = async (req, res) => {
   const extend = { curriculums: { $in: [curriculumMeta._id] } }
   const countUsers = users => User.count({ _id: { $in: users } })
 
-  // TODO count after all query as in topics
   const [
     all,
     registered,

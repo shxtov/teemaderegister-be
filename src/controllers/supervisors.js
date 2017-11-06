@@ -7,7 +7,6 @@ module.exports.getSupervisors = async (req, res) => {
   const { query } = req
   let { curriculumId, q, sub, page, columnKey, order } = query
 
-  // TODO page, order, sort - move in separate service
   page = page || 1
   const pageSize = 20
   const skip = page !== 1 ? (page - 1) * pageSize : 0
@@ -150,7 +149,6 @@ module.exports.getSupervisors = async (req, res) => {
 }
 
 module.exports.getSupervisorBySlug = async (req, res) => {
-  // TODO validate req.params.slug
   const supervisor = await User
     .findOne({ 'profile.slug': req.params.slug })
     .select('_id profile')
