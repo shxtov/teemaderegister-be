@@ -27,5 +27,5 @@ APP_NAME=app
 
 Development
 ```
-nodemon --debug bin/www
+npm run dev
 ```
