@@ -23,7 +23,7 @@ module.exports.jwtEnsure = async (req, res, next) => {
     }
 
     // check if token valid after user data changed
-    const user = await User.findById(req.user._id).select('updatedAt')
+    const user = await User.findById(req.user._id).select('login.passwordUpdatedAt')
     if (!user) return next(new NotAuthorizedError())
 
     // DO NOT allow if user password changed after last token issued
