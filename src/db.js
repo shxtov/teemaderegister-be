@@ -1,6 +1,11 @@
-const mongoose = require('mongoose')
-const Promise = require('bluebird')
 require('dotenv').config()
 
+const { MONGOOSE_DEBUG, MONGODB_URI: uri } = process.env
+const mongoose = require('mongoose')
+const Promise = require('bluebird')
+
 mongoose.Promise = Promise
-module.exports = mongoose.connect(process.env.MONGODB_URI, { useMongoClient: true })
+
+MONGOOSE_DEBUG === 'true' && mongoose.set('debug', true)
+
+module.exports = mongoose.connect(uri, { useMongoClient: true })

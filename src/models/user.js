@@ -14,7 +14,8 @@ const userSchema = new mongoose.Schema(
       email: { type: String },
       password: { type: String },
       passwordResetToken: String,
-      passwordResetExpires: Date
+      passwordResetExpires: Date,
+      passwordUpdatedAt: { type: Date, default: null }
     },
 
     settings: {
