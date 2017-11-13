@@ -23,12 +23,16 @@ module.exports.localSignup = async (req, res) => {
 
   const existingUser = await User.findOne({ 'login.email': email })
   if (existingUser) { throw new Error('Account with that email address already exists') }
-
+  const userSlug = await User.findOne({
+    $and: [ { 'profile.lastName': lastName }, { 'profile.firstName': firstName } ]
+  }, {}, {sort: {$natural: -1}})
   const user = await new User({
     profile: {
       firstName,
       lastName,
-      slug: slug(firstName + ' ' + lastName)
+      slug: userSlug
+        ? slug(firstName + ' ' + lastName + ' ' + uuSlug(userSlug.profile.slug))
+        : slug(firstName + ' ' + lastName)
     },
     login: {
       email,
@@ -38,7 +42,13 @@ module.exports.localSignup = async (req, res) => {
 
   if (!user) throw new Error('No user created')
 
-  return res.json({ message: 'User created' })
+  return res.json({ message: 'User created' + user })
+}
+
+const uuSlug = (str) => {
+  let matches = str.match(/\d+$/)
+  if (matches) return parseInt(matches[0]) + 1
+  else return 1
 }
 
 module.exports.logout = async (req, res) => {
