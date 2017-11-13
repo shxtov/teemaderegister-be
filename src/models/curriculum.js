@@ -28,6 +28,10 @@ const curriculumSchema = new mongoose.Schema(
       type: String,
       enum: ['BA', 'MA', 'PHD'],
       required: true
+    },
+    closed: {
+      type: Date,
+      required: false
     }
   },
   {

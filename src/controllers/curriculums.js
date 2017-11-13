@@ -19,7 +19,8 @@ module.exports.getCurriculums = async (req, res) => {
             slugs: '$slugs',
             _id: '$_id',
             abbreviation: '$abbreviation',
-            languages: '$languages'
+            languages: '$languages',
+            closed: '$closed'
           }
         },
         count: { $sum: 1 }
