@@ -1,4 +1,5 @@
 const slug = require('slug')
+const uniqueSlug = require('../utils/uniqueSlug')
 
 const User = require('../models/user')
 const log = require('../utils/logger')
@@ -20,17 +21,19 @@ module.exports.localLogin = async (req, res) => {
 
 module.exports.localSignup = async (req, res) => {
   const { firstName, lastName, email, password } = req.body
+
   const existingUser = await User.findOne({ 'login.email': email })
-  if (existingUser) { throw new Error('Account with that email address already exists') }
-  const userSlug = await User.findOne({
-    $and: [ { 'profile.lastName': lastName }, { 'profile.firstName': firstName } ]
-  }, {}, {sort: {$natural: -1}})
+  if (existingUser) throw new Error('Account with that email address already exists')
+
+  const userSlug = await User
+    .findOne({$and: [ { 'profile.lastName': lastName }, { 'profile.firstName': firstName } ]}, {}, {sort: {$natural: -1}})
+
   const user = await new User({
     profile: {
       firstName,
       lastName,
       slug: userSlug
-        ? slug(firstName + ' ' + lastName + ' ' + uuSlug(userSlug.profile.slug))
+        ? slug(firstName + ' ' + lastName + ' ' + uniqueSlug(userSlug.profile.slug))
         : slug(firstName + ' ' + lastName)
     },
     login: {
@@ -41,13 +44,7 @@ module.exports.localSignup = async (req, res) => {
 
   if (!user) throw new Error('No user created')
 
-  return res.json({ message: 'User created' })
-}
-
-const uuSlug = (str) => {
-  let matches = str.match(/\d+$/)
-  if (matches) return parseInt(matches[0]) + 1
-  else return 1
+  return res.json({ message: user })
 }
 
 module.exports.logout = async (req, res) => {
