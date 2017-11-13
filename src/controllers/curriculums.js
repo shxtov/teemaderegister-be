@@ -8,7 +8,7 @@ const { Error } = require('../utils/errors')
 
 module.exports.getCurriculums = async (req, res) => {
   const curriculums = await Curriculum.aggregate(
-    { $sort: { type: -1, name: 1 } },
+    { $sort: { type: -1, 'names.et': 1 } },
     {
       $group: {
         _id: '$type',
