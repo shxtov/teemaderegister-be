@@ -37,7 +37,7 @@ module.exports.getCurriculums = async (req, res) => {
 
 module.exports.getCurriculumBySlug = async (req, res) => {
   const curriculumMeta = await Curriculum
-    .findOne({ 'slugs.et': req.params.slug })
+    .findOne({ $or: [{'slugs.et': req.params.slug}, {'slugs.en': req.params.slug}] })
     .populate('representative', '_id profile')
 
   if (!curriculumMeta) throw new Error(`no curriculum with slug ${req.params.slug}`)
