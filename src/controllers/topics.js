@@ -24,10 +24,11 @@ module.exports.getTopics = async (req, res) => {
     extend = { 'supervisors.supervisor': { $in: [supervisorId] } }
   }
 
-  // search
   if (q) {
+    const relatedTopicsIds = await exports.getRelatedTopicsIds(q)
+
     extend = {
-      $or: [{ title: { $regex: q, $options: 'i' } }]
+      _id: { $in: relatedTopicsIds }
     }
   }
 
@@ -62,3 +63,23 @@ module.exports.getTopics = async (req, res) => {
 
   return res.json({ topics, count, query })
 }
+
+exports.getRelatedTopicsIds = async q => (await Topic.aggregate([
+  {
+    $project: {
+      fullName: {
+        $concat: ['$author.firstName', ' ', '$author.lastName']
+      },
+      title: 1
+    }
+  },
+  {
+    $match: {
+      $or: [
+        { fullName: { $regex: q, $options: 'i' } },
+        { title: { $regex: q, $options: 'i' } }
+      ]
+    }
+  },
+  { $project: { fullName: 0, title: 0 } }
+])).reduce((arrayOfIds, topic) => [topic._id, ...arrayOfIds], [])

@@ -2,10 +2,12 @@ const Topic = require('../models/topic')
 const User = require('../models/user')
 const Promise = require('bluebird')
 const { TopicsQuery } = require('../utils/queryHelpers')
+const { getRelatedTopicsIds } = require('../controllers/topics')
 
 module.exports.getCounts = async (req, res) => {
   const { q } = req.query
-  const topicExtend = { title: { $regex: q, $options: 'i' } }
+  const relatedTopicsIds = await getRelatedTopicsIds(q)
+  const topicExtend = { _id: { $in: relatedTopicsIds } }
 
   const countUsers = users => {
     return User.aggregate([
