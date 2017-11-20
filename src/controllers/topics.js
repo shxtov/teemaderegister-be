@@ -70,16 +70,18 @@ exports.getRelatedTopicsIds = async q => (await Topic.aggregate([
       fullName: {
         $concat: ['$author.firstName', ' ', '$author.lastName']
       },
-      title: 1
+      title: 1,
+      slug: 1
     }
   },
   {
     $match: {
       $or: [
         { fullName: { $regex: q, $options: 'i' } },
-        { title: { $regex: q, $options: 'i' } }
+        { title: { $regex: q, $options: 'i' } },
+        { slug: { $regex: q, $options: 'i' } }
       ]
     }
   },
-  { $project: { fullName: 0, title: 0 } }
+  { $project: { fullName: 0, title: 0, slug: 0 } }
 ])).reduce((arrayOfIds, topic) => [topic._id, ...arrayOfIds], [])
